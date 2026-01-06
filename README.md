@@ -6,7 +6,7 @@ Live Demo: [https://edgarcia-id.github.io/it-asset-depreciation/](https://edgarc
 
 ### 🧐 Why this tool?
 IT Managers often struggle to answer Finance/Accounting questions like:
-* "What is the remaining value of our 2023 Server?"
+* "What is the remaining value of our 2026 Server?"
 * "When should we budget for a laptop refresh?"
 
 This tool bridges the gap between **IT Operations** and **Financial Planning**.
