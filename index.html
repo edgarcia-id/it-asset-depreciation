@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Asset Depreciation Calculator | Ed Garcia (NusaIT)</title>
+    <link rel="icon" href="assets/img/icon-nusait.webp" sizes="192x192" type="image/webp" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .header-brand { background: linear-gradient(135deg, #198754 0%, #157347 100%); color: white; padding: 25px; border-radius: 0 0 15px 15px; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .card-custom { border: none; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .table-head-custom { background-color: #e9ecef; }
+        .final-value-box { background: #e8f5e9; border-left: 5px solid #198754; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="header-brand text-center">
+    <h2 class="fw-bold"><i class="fas fa-calculator"></i> IT Asset Depreciation</h2>
+    <p class="mb-0 opacity-75">Calculate Yearly & Monthly Book Value for IT Assets</p>
+    <small class="mt-2 d-block">Maintained by <a href="https://nusait.com/about" class="text-white fw-bold">Ed Garcia (NusaIT)</a></small>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 mb-4">
+            <div class="card card-custom p-4 h-100">
+                <h5 class="card-title mb-4 text-success"><i class="fas fa-edit"></i> Asset Details</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Asset Name</label>
+                    <input type="text" id="assetName" class="form-control" placeholder="e.g. MacBook Pro M3">
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Purchase Price (IDR)</label>
+                        <input type="number" id="assetCost" class="form-control" placeholder="25000000">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Salvage Value (Residu)</label>
+                        <input type="number" id="salvageValue" class="form-control" placeholder="5000000" value="0">
+                        <div class="form-text small">Value at end of life.</div>
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Useful Life (Years)</label>
+                        <input type="number" id="usefulLife" class="form-control" value="4">
+                        <div class="form-text small">Standard: Laptop 4y, Server 5-8y.</div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Method</label>
+                        <select id="method" class="form-select">
+                            <option value="SL">Straight Line (Garis Lurus)</option>
+                            <option value="DDB">Double Declining (Saldo Menurun)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="calculateDepreciation()" class="btn btn-success w-100 fw-bold shadow-sm">
+                    Calculate Schedule <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card card-custom p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title text-secondary"><i class="fas fa-chart-line"></i> Depreciation Schedule</h5>
+                    <span class="badge bg-secondary" id="methodBadge">Straight Line</span>
+                </div>
+
+                <div class="final-value-box mb-3 d-none" id="summaryBox">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="text-muted d-block">Asset Cost</small>
+                            <span class="fw-bold text-dark" id="dispCost">-</span>
+                        </div>
+                        <div class="col-4 border-start border-end">
+                            <small class="text-muted d-block">Monthly Expense</small>
+                            <span class="fw-bold text-danger" id="dispMonthly">-</span>
+                            <small class="d-block text-muted" style="font-size: 0.7rem;">(First Year)</small>
+                        </div>
+                        <div class="col-4">
+                            <small class="text-muted d-block">Useful Life</small>
+                            <span class="fw-bold text-success" id="dispLife">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped align-middle">
+                        <thead class="table-head-custom small">
+                            <tr>
+                                <th>Year</th>
+                                <th class="text-end">Opening</th>
+                                <th class="text-end">Annual Dep.</th>
+                                <th class="text-end text-danger" style="background-color: #fdf2f2;">Monthly Dep.</th>
+                                <th class="text-end">Ending Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultBody">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="text-center py-5 text-muted">
+                    <i class="fas fa-coins fa-3x mb-3 opacity-25"></i>
+                    <p>Enter asset details to view monthly & yearly depreciation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mt-5 text-muted small">
+        <p>This tool helps IT Managers estimate Operational Expenditure (OpEx). <br>For tax reporting, please consult your Finance Department.</p>
+        <p>Need to build a comprehensive <strong>IT Budget Plan</strong>? <a href="https://nusait.com" class="fw-bold text-decoration-none text-success">Consult with Ed Garcia</a>.</p>
+    </div>
+</div>
+
+<script>
+    // Formatter for IDR
+    const formatCurrency = (num) => {
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+    };
+
+    function calculateDepreciation() {
+        const cost = parseFloat(document.getElementById('assetCost').value);
+        const salvage = parseFloat(document.getElementById('salvageValue').value) || 0;
+        const life = parseInt(document.getElementById('usefulLife').value);
+        const method = document.getElementById('method').value;
+
+        if (isNaN(cost) || isNaN(life) || life <= 0) {
+            alert("Please check your input values.");
+            return;
+        }
+
+        let schedule = [];
+        let currentBookValue = cost;
+        let annualDepreciation = 0;
+
+        // Header Summary Update
+        document.getElementById('summaryBox').classList.remove('d-none');
+        document.getElementById('emptyState').classList.add('d-none');
+        document.getElementById('methodBadge').innerText = method === 'SL' ? 'Straight Line Method' : 'Double Declining Balance';
+        
+        document.getElementById('dispCost').innerText = formatCurrency(cost);
+        document.getElementById('dispLife').innerText = life + " Years";
+
+        // Calculation Loop
+        for (let year = 1; year <= life; year++) {
+            let openingValue = currentBookValue;
+
+            if (method === 'SL') {
+                // Straight Line: (Cost - Salvage) / Life
+                annualDepreciation = (cost - salvage) / life;
+            } else if (method === 'DDB') {
+                // Double Declining: (Book Value * 2) / Life
+                let rate = 2 / life;
+                annualDepreciation = currentBookValue * rate;
+                
+                // Adjust if dipping below salvage
+                if (currentBookValue - annualDepreciation < salvage) {
+                    annualDepreciation = currentBookValue - salvage;
+                }
+            }
+
+            // Safety check for final year/salvage
+            if (currentBookValue - annualDepreciation < salvage) {
+                 annualDepreciation = currentBookValue - salvage;
+            }
+
+            let monthlyDepreciation = annualDepreciation / 12;
+            let endingValue = openingValue - annualDepreciation;
+            
+            // Push to array
+            schedule.push({
+                year: year,
+                opening: openingValue,
+                depreciation: annualDepreciation,
+                monthly: monthlyDepreciation,
+                ending: endingValue
+            });
+
+            currentBookValue = endingValue;
+        }
+
+        // Render Table
+        let html = '';
+        schedule.forEach(row => {
+            html += `
+                <tr>
+                    <td class="fw-bold small">Year ${row.year}</td>
+                    <td class="text-end small text-muted">${formatCurrency(row.opening)}</td>
+                    <td class="text-end small">${formatCurrency(row.depreciation)}</td>
+                    <td class="text-end fw-bold text-danger small" style="background-color: #fff5f5;">${formatCurrency(row.monthly)}</td>
+                    <td class="text-end fw-bold text-dark small">${formatCurrency(row.ending)}</td>
+                </tr>
+            `;
+        });
+        document.getElementById('resultBody').innerHTML = html;
+
+        // Update Summary Expense (Shows 1st year monthly expense)
+        document.getElementById('dispMonthly').innerText = formatCurrency(schedule[0].monthly);
+    }
+</script>
+
+</body>
+</html>
